@@ -36,36 +36,25 @@ const Navbar: React.FC = () => {
       <Container maxWidth="lg">
         <Toolbar>
           <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
-            <img 
-              src="/logo.png" 
-              alt="NerdHub Logo" 
-              style={{ 
-                height: '40px', 
-                marginRight: '16px',
-                filter: 'brightness(1.2)',
-              }} 
-            />
             <Typography 
-              variant="h4" 
-              component="div" 
+              variant="h6" 
+              component="div"
               sx={{ 
-                fontFamily: '"Crimson Text", serif',
-                fontWeight: 700,
                 color: 'white',
-                textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
+                fontWeight: 600,
+                mr: 2,
               }}
             >
-              NerdHub
+              WordWise
             </Typography>
             <Typography 
               variant="body2" 
               sx={{ 
-                ml: 1, 
                 color: 'rgba(255,255,255,0.7)',
                 fontStyle: 'italic',
               }}
             >
-              🦉 Where Knowledge Nests
+              Comprehensive Word & Research Analysis
             </Typography>
           </Box>
           

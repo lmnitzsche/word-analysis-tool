@@ -32,6 +32,7 @@ import {
   Star,
   Bookmark,
 } from '@mui/icons-material';
+import { searchScholarPapers } from '../services';
 
 interface ResearchPaper {
   id: string;
@@ -52,6 +53,7 @@ const Research: React.FC = () => {
   const [yearFilter, setYearFilter] = useState('all');
   const [fieldFilter, setFieldFilter] = useState('all');
   const [savedPapers, setSavedPapers] = useState<string[]>([]);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   // Mock research papers data
   const mockPapers: ResearchPaper[] = [
@@ -94,34 +96,49 @@ const Research: React.FC = () => {
     if (!searchQuery.trim()) return;
 
     setIsLoading(true);
+    setApiError(null);
     
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Try to fetch real papers from SerpApi
+      const apiResults = await searchScholarPapers(searchQuery);
       
-      // Filter mock papers based on search query
-      const filteredPapers = mockPapers.filter(paper =>
-        paper.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        paper.abstract.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        paper.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        paper.authors.some(author => author.toLowerCase().includes(searchQuery.toLowerCase()))
-      );
-
-      // Apply filters
-      let results = filteredPapers;
-      
-      if (yearFilter !== 'all') {
-        const currentYear = new Date().getFullYear();
-        if (yearFilter === 'recent') {
-          results = results.filter(paper => paper.year >= currentYear - 2);
-        } else if (yearFilter === 'older') {
-          results = results.filter(paper => paper.year < currentYear - 2);
-        }
+      if (apiResults === null) {
+        // API key not configured
+        setApiError('SerpApi key not configured. Showing sample papers. Add REACT_APP_SERPAPI_KEY to .env to enable real searches.');
+        setPapers(mockPapers);
+      } else if (apiResults && apiResults.length > 0) {
+        // Transform API results to match our interface
+        const transformedPapers: ResearchPaper[] = apiResults.map((result: any, index: number) => ({
+          id: result.result_id || `api-${index}`,
+          title: result.title || 'Untitled',
+          authors: result.publication_info?.authors?.map((a: any) => a.name) || ['Unknown Author'],
+          journal: result.publication_info?.summary || 'Unknown Journal',
+          year: parseInt(result.publication_info?.summary?.match(/\d{4}/)?.[0] || new Date().getFullYear().toString()),
+          abstract: result.snippet || 'No abstract available',
+          citationCount: parseInt(result.inline_links?.cited_by?.total || '0'),
+          url: result.link || '#',
+          tags: result.resources?.map((r: any) => r.title) || [],
+        }));
+        
+        setPapers(transformedPapers);
+        setApiError(null);
+      } else {
+        // API returned empty results
+        setApiError('No papers found. Showing sample papers.');
+        const filteredPapers = mockPapers.filter(paper =>
+          paper.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          paper.abstract.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          paper.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase())) ||
+          paper.authors.some(author => author.toLowerCase().includes(searchQuery.toLowerCase()))
+        );
+        
+        setPapers(filteredPapers.length > 0 ? filteredPapers : mockPapers);
       }
-
-      setPapers(results);
     } catch (error) {
       console.error('Error searching papers:', error);
+      setApiError('Error connecting to research database. Showing sample papers.');
+      // Fallback to mock data on error
+      setPapers(mockPapers);
     } finally {
       setIsLoading(false);
     }
@@ -160,7 +177,7 @@ const Research: React.FC = () => {
             Research Hub
           </Typography>
           <Typography variant="h6" color="text.secondary">
-            🦉 Discover, analyze, and organize academic research
+            Discover, analyze, and organize academic research
           </Typography>
         </Box>
 
@@ -232,7 +249,7 @@ const Research: React.FC = () => {
         {papers.length === 0 && (
           <Paper elevation={2} sx={{ p: 3, mb: 4, borderRadius: 3 }}>
             <Typography variant="h6" sx={{ mb: 2, color: '#2E4057' }}>
-              🔗 Quick Research Topics
+              Quick Research Topics
             </Typography>
             <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
               {[
@@ -250,6 +267,11 @@ const Research: React.FC = () => {
                   label={topic}
                   onClick={() => {
                     setSearchQuery(topic);
+                    setTimeout(() => {
+                      const query = topic;
+                      setSearchQuery(query);
+                      searchPapers();
+                    }, 100);
                   }}
                   sx={{ 
                     cursor: 'pointer',
@@ -262,6 +284,13 @@ const Research: React.FC = () => {
               ))}
             </Box>
           </Paper>
+        )}
+
+        {/* API Error Alert */}
+        {apiError && (
+          <Alert severity="info" sx={{ mb: 3, borderRadius: 3 }}>
+            {apiError}
+          </Alert>
         )}
 
         {/* Results */}
@@ -399,7 +428,7 @@ const Research: React.FC = () => {
             }}
           >
             <Typography variant="h6" sx={{ mb: 1 }}>
-              🦉 Start Your Research Journey
+              Start Your Research Journey
             </Typography>
             <Typography variant="body2" sx={{ mb: 2 }}>
               Search for academic papers, research topics, or authors. Our platform integrates with Google Scholar 

@@ -18,33 +18,22 @@ import {
   Tabs,
   Tab,
   IconButton,
+  CircularProgress,
 } from '@mui/material';
 import {
   Search,
   Spellcheck,
-  VolumeUp,
   Psychology,
   History,
   TrendingUp,
   Book,
   Language,
   Link as LinkIcon,
+  MusicNote,
 } from '@mui/icons-material';
-
-interface WordSuggestion {
-  word: string;
-  penalty: number;
-  confidence: number;
-}
-
-interface WordInfo {
-  word: string;
-  definition?: string;
-  etymology?: string;
-  phonetic?: string;
-  partOfSpeech?: string;
-  examples?: string[];
-}
+import { fetchWordDefinition } from '../services';
+import { transformWordDefinition } from '../utils/transformers';
+import type { WordInfo, WordSuggestion } from '../types/models';
 
 const WordAnalyzer: React.FC = () => {
   const [inputWord, setInputWord] = useState('');
@@ -129,18 +118,31 @@ const WordAnalyzer: React.FC = () => {
 
       setSuggestions(wordSuggestions);
 
-      // Mock word information (you can enhance this with real API calls)
-      setWordInfo({
-        word: normalizedWord,
-        definition: `Definition for "${normalizedWord}" - A word from our comprehensive dictionary`,
-        etymology: `Etymology: The word "${normalizedWord}" has interesting linguistic origins...`,
-        phonetic: `/ˈfʌŋkʃən/`,
-        partOfSpeech: 'noun',
-        examples: [
-          `The ${normalizedWord} works perfectly in this context.`,
-          `Understanding ${normalizedWord} is important for comprehension.`,
-        ],
-      });
+      // Fetch real definition from Dictionary API
+      try {
+        const definitionData = await fetchWordDefinition(normalizedWord);
+        if (definitionData) {
+          const wordInfo = transformWordDefinition(definitionData);
+          setWordInfo(wordInfo);
+        } else {
+          setWordInfo({
+            word: normalizedWord,
+            definition: `No definition found for "${normalizedWord}"`,
+            phonetic: '',
+            partOfSpeech: '',
+            examples: [],
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching definition:', error);
+        setWordInfo({
+          word: normalizedWord,
+          definition: `Definition unavailable for "${normalizedWord}"`,
+          phonetic: '',
+          partOfSpeech: '',
+          examples: [],
+        });
+      }
 
     } catch (error) {
       console.error('Error analyzing word:', error);
@@ -159,7 +161,7 @@ const WordAnalyzer: React.FC = () => {
     { name: 'Etymology', url: `https://www.etymonline.com/search?q=${inputWord}`, icon: <History /> },
     { name: 'Google Trends', url: `https://trends.google.com/trends/explore?q=${inputWord}`, icon: <TrendingUp /> },
     { name: 'Urban Dictionary', url: `https://www.urbandictionary.com/define.php?term=${inputWord}`, icon: <Language /> },
-    { name: 'Rhyme Zone', url: `https://www.rhymezone.com/r/rhyme.cgi?Word=${inputWord}&typeofrhyme=perfect&org1=syl&org2=l&org3=y`, icon: <VolumeUp /> },
+    { name: 'Rhyme Zone', url: `https://www.rhymezone.com/r/rhyme.cgi?Word=${inputWord}&typeofrhyme=perfect&org1=syl&org2=l&org3=y`, icon: <MusicNote /> },
   ];
 
   return (
@@ -183,7 +185,7 @@ const WordAnalyzer: React.FC = () => {
             Word Analysis Hub
           </Typography>
           <Typography variant="h6" color="text.secondary">
-            🦉 Enhanced with your original algorithm - now with {dictionary.length.toLocaleString()}+ words
+            Enhanced with your original algorithm - now with {dictionary.length.toLocaleString()}+ words
           </Typography>
         </Box>
 
@@ -288,7 +290,7 @@ const WordAnalyzer: React.FC = () => {
                           }}
                         />
                         <IconButton size="small">
-                          <VolumeUp fontSize="small" />
+                          <MusicNote fontSize="small" />
                         </IconButton>
                       </ListItem>
                       {index < suggestions.length - 1 && <Divider />}
@@ -303,7 +305,6 @@ const WordAnalyzer: React.FC = () => {
               <CardContent>
                 <Tabs value={activeTab} onChange={handleTabChange} sx={{ mb: 3 }}>
                   <Tab label="Definition" />
-                  <Tab label="Etymology" />
                   <Tab label="External Links" />
                 </Tabs>
 
@@ -338,18 +339,7 @@ const WordAnalyzer: React.FC = () => {
                   </Box>
                 )}
 
-                {activeTab === 1 && wordInfo && (
-                  <Box>
-                    <Typography variant="h6" sx={{ mb: 2, color: '#2E4057' }}>
-                      Etymology
-                    </Typography>
-                    <Typography variant="body1">
-                      {wordInfo.etymology}
-                    </Typography>
-                  </Box>
-                )}
-
-                {activeTab === 2 && (
+                {activeTab === 1 && (
                   <Box>
                     <Typography variant="h6" sx={{ mb: 2, color: '#2E4057' }}>
                       External Resources
@@ -398,7 +388,7 @@ const WordAnalyzer: React.FC = () => {
             }}
           >
             <Typography variant="h6" sx={{ mb: 1 }}>
-              🦉 Enhanced Word Analysis Ready!
+              Enhanced Word Analysis Ready!
             </Typography>
             <Typography variant="body2">
               This enhanced version uses your original spell-checking algorithm with improved UI and additional features. 

@@ -18,6 +18,8 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Pagination,
+  Grid,
 } from '@mui/material';
 import {
   Search,
@@ -29,6 +31,7 @@ import {
   OpenInNew,
   FilterList,
 } from '@mui/icons-material';
+import { searchBooks as searchBooksAPI } from '../services';
 
 interface Book {
   id: string;
@@ -54,6 +57,8 @@ const Books: React.FC = () => {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [languageFilter, setLanguageFilter] = useState('all');
   const [favoriteBooks, setFavoriteBooks] = useState<string[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const booksPerPage = 12; // 3 rows of 4 books
 
   // Mock books data with focus on nerdy/academic topics
   const mockBooks: Book[] = [
@@ -127,35 +132,52 @@ const Books: React.FC = () => {
     if (!searchQuery.trim()) return;
 
     setIsLoading(true);
+    setCurrentPage(1); // Reset to first page on new search
     
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Try to fetch real books from Google Books API - request 40 books
+      const apiResults = await searchBooksAPI(searchQuery, 40);
       
-      // Filter mock books based on search query
-      let filteredBooks = mockBooks.filter(book =>
-        book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        book.authors.some(author => author.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        book.categories.some(category => category.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        book.description.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-
-      // Apply filters
-      if (categoryFilter !== 'all') {
-        filteredBooks = filteredBooks.filter(book =>
-          book.categories.some(category => 
-            category.toLowerCase().includes(categoryFilter.toLowerCase())
-          )
+      if (apiResults && apiResults.length > 0) {
+        // Transform API results to match our interface
+        const transformedBooks: Book[] = apiResults.map((item: any) => {
+          const volumeInfo = item.volumeInfo || {};
+          const imageLinks = volumeInfo.imageLinks || {};
+          
+          return {
+            id: item.id || Math.random().toString(),
+            title: volumeInfo.title || 'Untitled',
+            authors: volumeInfo.authors || ['Unknown Author'],
+            isbn: volumeInfo.industryIdentifiers?.[0]?.identifier || 'N/A',
+            publishedDate: volumeInfo.publishedDate || 'Unknown',
+            pageCount: volumeInfo.pageCount || 0,
+            categories: volumeInfo.categories || [],
+            description: volumeInfo.description || 'No description available',
+            averageRating: volumeInfo.averageRating || 0,
+            ratingsCount: volumeInfo.ratingsCount || 0,
+            thumbnail: imageLinks.thumbnail || imageLinks.smallThumbnail || '',
+            previewLink: volumeInfo.previewLink || volumeInfo.infoLink || '#',
+            language: volumeInfo.language || 'en',
+            publisher: volumeInfo.publisher || 'Unknown Publisher',
+          };
+        });
+        
+        setBooks(transformedBooks);
+      } else {
+        // Fallback to mock data if API returns no results
+        let filteredBooks = mockBooks.filter(book =>
+          book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          book.authors.some(author => author.toLowerCase().includes(searchQuery.toLowerCase())) ||
+          book.categories.some(category => category.toLowerCase().includes(searchQuery.toLowerCase())) ||
+          book.description.toLowerCase().includes(searchQuery.toLowerCase())
         );
+        
+        setBooks(filteredBooks.length > 0 ? filteredBooks : mockBooks);
       }
-
-      if (languageFilter !== 'all') {
-        filteredBooks = filteredBooks.filter(book => book.language === languageFilter);
-      }
-
-      setBooks(filteredBooks);
     } catch (error) {
       console.error('Error searching books:', error);
+      // Fallback to mock data on error
+      setBooks(mockBooks);
     } finally {
       setIsLoading(false);
     }
@@ -205,7 +227,7 @@ const Books: React.FC = () => {
             Book Discovery
           </Typography>
           <Typography variant="h6" color="text.secondary">
-            🦉 Explore academic texts, technical books, and scholarly works
+            Explore academic texts, technical books, and scholarly works
           </Typography>
         </Box>
 
@@ -279,7 +301,7 @@ const Books: React.FC = () => {
         {books.length === 0 && (
           <Paper elevation={2} sx={{ p: 3, mb: 4, borderRadius: 3 }}>
             <Typography variant="h6" sx={{ mb: 2, color: '#2E4057' }}>
-              📚 Popular Academic Categories
+              Popular Academic Categories
             </Typography>
             <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
               {popularCategories.map((category) => (
@@ -288,6 +310,9 @@ const Books: React.FC = () => {
                   label={category}
                   onClick={() => {
                     setSearchQuery(category);
+                    setTimeout(() => {
+                      searchBooks();
+                    }, 100);
                   }}
                   sx={{ 
                     cursor: 'pointer',
@@ -320,34 +345,46 @@ const Books: React.FC = () => {
               </Button>
             </Box>
 
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 3 }}>
-              {books.map((book) => (
+            <Box sx={{ 
+              display: 'grid', 
+              gridTemplateColumns: { 
+                xs: '1fr', 
+                sm: 'repeat(2, 1fr)', 
+                md: 'repeat(4, 1fr)' 
+              }, 
+              gap: 3 
+            }}>
+              {books
+                .slice((currentPage - 1) * booksPerPage, currentPage * booksPerPage)
+                .map((book) => (
                 <Card 
-                  key={book.id}
+                  key={book.id} 
                   sx={{ 
+                    height: '100%',
                     display: 'flex',
+                    flexDirection: 'column',
                     borderRadius: 3,
                     transition: 'all 0.3s ease',
                     '&:hover': {
                       boxShadow: '0 8px 25px rgba(46, 64, 87, 0.15)',
+                      transform: 'translateY(-4px)',
                     },
                   }}
                 >
                   <CardMedia
                     component="div"
                     sx={{
-                      width: 120,
-                      minWidth: 120,
-                      background: 'linear-gradient(135deg, #2E4057 0%, #4A5D73 100%)',
+                      height: 180,
+                      background: book.thumbnail ? `url(${book.thumbnail}) center/cover` : 'linear-gradient(135deg, #2E4057 0%, #4A5D73 100%)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       color: 'white',
                     }}
                   >
-                    <MenuBook sx={{ fontSize: 40 }} />
+                    {!book.thumbnail && <MenuBook sx={{ fontSize: 60 }} />}
                   </CardMedia>
-                  <CardContent sx={{ flexGrow: 1, p: 3 }}>
+                  <CardContent sx={{ flexGrow: 1, p: 2, display: 'flex', flexDirection: 'column' }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
                       <Typography 
                         variant="h6" 
@@ -357,8 +394,14 @@ const Books: React.FC = () => {
                           fontWeight: 'bold',
                           flexGrow: 1,
                           pr: 1,
-                          fontSize: '1rem',
+                          fontSize: '0.95rem',
                           lineHeight: 1.3,
+                          minHeight: '2.6em',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
                         }}
                       >
                         {book.title}
@@ -376,78 +419,104 @@ const Books: React.FC = () => {
 
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
                       <Person sx={{ fontSize: 14, color: 'text.secondary' }} />
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography variant="body2" color="text.secondary" sx={{ 
+                        fontSize: '0.8rem',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}>
                         {book.authors.join(', ')}
                       </Typography>
                     </Box>
 
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, flexWrap: 'wrap' }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <CalendarToday sx={{ fontSize: 14, color: 'text.secondary' }} />
-                        <Typography variant="body2" color="text.secondary">
-                          {book.publishedDate}
-                        </Typography>
-                      </Box>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <Rating
-                          value={book.averageRating}
-                          precision={0.1}
-                          size="small"
-                          readOnly
-                        />
-                        <Typography variant="body2" color="text.secondary">
-                          ({book.ratingsCount})
-                        </Typography>
-                      </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                      <CalendarToday sx={{ fontSize: 14, color: 'text.secondary' }} />
+                      <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
+                        {book.publishedDate}
+                      </Typography>
                     </Box>
 
-                    <Typography variant="body2" sx={{ mb: 2, lineHeight: 1.5, fontSize: '0.85rem' }}>
-                      {book.description.length > 120 
-                        ? `${book.description.substring(0, 120)}...` 
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
+                      <Rating
+                        value={book.averageRating}
+                        precision={0.1}
+                        size="small"
+                        readOnly
+                      />
+                      <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                        ({book.ratingsCount})
+                      </Typography>
+                    </Box>
+
+                    <Typography variant="body2" sx={{ mb: 1, lineHeight: 1.4, fontSize: '0.75rem', flexGrow: 1, overflow: 'hidden' }}>
+                      {book.description.length > 80 
+                        ? `${book.description.substring(0, 80)}...` 
                         : book.description
                       }
                     </Typography>
 
-                    <Box sx={{ display: 'flex', gap: 0.5, mb: 2, flexWrap: 'wrap' }}>
-                      {book.categories.slice(0, 3).map((category) => (
+                    <Box sx={{ display: 'flex', gap: 0.5, mb: 1, flexWrap: 'wrap' }}>
+                      {book.categories.slice(0, 2).map((category) => (
                         <Chip 
                           key={category}
                           label={category}
                           size="small"
                           variant="outlined"
-                          sx={{ fontSize: '0.7rem', height: '22px' }}
+                          sx={{ fontSize: '0.65rem', height: '20px' }}
                         />
                       ))}
                     </Box>
 
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
-                        {book.pageCount} pages • {book.publisher}
-                      </Typography>
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        endIcon={<OpenInNew />}
-                        href={book.previewLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        sx={{ 
-                          borderColor: '#2E4057',
-                          color: '#2E4057',
-                          fontSize: '0.75rem',
-                          '&:hover': {
-                            backgroundColor: '#2E4057',
-                            color: 'white',
-                          },
-                        }}
-                      >
-                        Preview
-                      </Button>
-                    </Box>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      fullWidth
+                      endIcon={<OpenInNew />}
+                      href={book.previewLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      sx={{ 
+                        borderColor: '#2E4057',
+                        color: '#2E4057',
+                        fontSize: '0.7rem',
+                        mt: 'auto',
+                        '&:hover': {
+                          backgroundColor: '#2E4057',
+                          color: 'white',
+                        },
+                      }}
+                    >
+                      View Book
+                    </Button>
                   </CardContent>
                 </Card>
               ))}
             </Box>
+            
+            {/* Pagination */}
+            {books.length > booksPerPage && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+                <Pagination 
+                  count={Math.ceil(books.length / booksPerPage)} 
+                  page={currentPage}
+                  onChange={(event, page) => setCurrentPage(page)}
+                  color="primary"
+                  size="large"
+                  sx={{
+                    '& .MuiPaginationItem-root': {
+                      color: '#2E4057',
+                    },
+                    '& .Mui-selected': {
+                      backgroundColor: '#2E4057',
+                      color: 'white',
+                      '&:hover': {
+                        backgroundColor: '#4A5D73',
+                      },
+                    },
+                  }}
+                />
+              </Box>
+            )}
           </Box>
         )}
 
@@ -463,7 +532,7 @@ const Books: React.FC = () => {
             }}
           >
             <Typography variant="h6" sx={{ mb: 1 }}>
-              🦉 Discover Academic Literature
+              Discover Academic Literature
             </Typography>
             <Typography variant="body2" sx={{ mb: 2 }}>
               Search through millions of academic books, technical manuals, and scholarly works. Perfect for 

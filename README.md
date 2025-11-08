@@ -1,8 +1,8 @@
-# **NerdHub 🦉 - Where Knowledge Nests**
+# **WordWise - Comprehensive Word & Research Analysis**
 
 ## Overview
 
-NerdHub is a comprehensive React-based platform for academic research, word analysis, and literary exploration. This evolved version of Word Wise combines advanced spell-checking algorithms with modern UI/UX design and integrates multiple research tools for scholars, students, and curious minds.
+WordWise is a comprehensive React-based platform for academic research, word analysis, and literary exploration. This evolved version combines advanced spell-checking algorithms with modern UI/UX design and integrates multiple research tools for scholars, students, and curious minds.
 
 ## Features
 
@@ -25,7 +25,7 @@ NerdHub is a comprehensive React-based platform for academic research, word anal
 - **Advanced Search:** By title, author, ISBN, category, and language
 - **Reading Lists:** Save and organize favorite books
 
-### 🎨 **Owl/Nerd Theme Design**
+### 🎨 **Professional Theme Design**
 - **Academic Color Palette:** Deep blues, browns, and beige for a scholarly feel
 - **Typography:** Georgia and Crimson Text fonts for readability
 - **Responsive Design:** Works seamlessly on desktop and mobile
@@ -119,13 +119,13 @@ This project evolved from the original Word Wise spell checker. Contributions ar
 
 ## Links
 
-- **Live Demo:** [logannitzsche.com/nerdhub](https://logannitzsche.com)
+- **Live Demo:** [logannitzsche.com/wordwise](https://logannitzsche.com)
 - **LinkedIn:** [Logan Nitzsche](https://www.linkedin.com/in/logan-nitzsche)
 - **GitHub:** [lmnitzsche](https://github.com/lmnitzsche)
 
 ---
 
-*From a simple spell checker to a comprehensive academic research platform - NerdHub represents the evolution of curiosity-driven development.* 🦉
+*From a simple spell checker to a comprehensive academic research platform - WordWise represents the evolution of curiosity-driven development.*
 - **In-Depth Word Analysis:** Provides detailed word analysis features including synonyms, antonyms, rhymes, and trends.
 
 ## Usage

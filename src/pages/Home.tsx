@@ -54,84 +54,119 @@ const Home: React.FC = () => {
   return (
     <Container maxWidth="lg">
       {/* Hero Section */}
-      <Box sx={{ textAlign: 'center', mb: 8, mt: 4 }}>
-        <Box sx={{ mb: 4 }}>
-          <img 
-            src="/logo.png" 
-            alt="NerdHub Logo" 
-            style={{ 
-              height: '120px',
-              filter: 'drop-shadow(0 4px 8px rgba(46, 64, 87, 0.3))',
-            }} 
-          />
-        </Box>
+      <Box sx={{ 
+        textAlign: 'center', 
+        py: { xs: 6, md: 10 },
+        mb: 8,
+      }}>
         <Typography 
           variant="h2" 
           component="h1" 
           sx={{ 
-            mb: 2, 
+            mb: 3, 
             color: '#2E4057',
-            textShadow: '2px 2px 4px rgba(0,0,0,0.1)',
+            fontWeight: 700,
+            fontSize: { xs: '2.5rem', md: '3.75rem' },
           }}
         >
-          Welcome to NerdHub 🦉
+          Welcome to WordWise
         </Typography>
         <Typography 
           variant="h5" 
-          component="h2" 
+          component="p" 
           sx={{ 
-            mb: 4, 
+            mb: 5, 
             color: '#5D4E37',
-            fontStyle: 'italic',
-            maxWidth: '600px',
+            fontWeight: 400,
+            maxWidth: '700px',
             mx: 'auto',
+            lineHeight: 1.6,
+            fontSize: { xs: '1.1rem', md: '1.5rem' },
           }}
         >
           Your comprehensive platform for word analysis, academic research, and literary exploration
         </Typography>
         
-        {/* Stats */}
-        <Paper 
-          elevation={3}
-          sx={{ 
-            p: 3, 
-            mb: 6,
-            background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(230,230,250,0.9) 100%)',
-            borderRadius: 3,
-          }}
-        >
-          <Box 
-            sx={{ 
-              display: 'grid', 
-              gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
-              gap: 3,
-              justifyItems: 'center',
+        <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
+          <Button
+            component={Link}
+            to="/words"
+            variant="contained"
+            size="large"
+            sx={{
+              bgcolor: '#2E4057',
+              px: 4,
+              py: 1.5,
+              fontSize: '1.1rem',
+              '&:hover': {
+                bgcolor: '#4A5D73',
+              },
             }}
           >
+            Get Started
+          </Button>
+          <Button
+            component={Link}
+            to="/books"
+            variant="outlined"
+            size="large"
+            sx={{
+              borderColor: '#2E4057',
+              color: '#2E4057',
+              px: 4,
+              py: 1.5,
+              fontSize: '1.1rem',
+              '&:hover': {
+                borderColor: '#4A5D73',
+                bgcolor: 'rgba(46, 64, 87, 0.04)',
+              },
+            }}
+          >
+            Explore Books
+          </Button>
+        </Box>
+      </Box>
+      
+      {/* Stats */}
+      <Paper 
+        elevation={0}
+        sx={{ 
+          p: 4, 
+          mb: 10,
+          background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+          borderRadius: 4,
+        }}
+      >
+        <Box 
+          sx={{ 
+            display: 'grid', 
+            gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
+            gap: 4,
+          }}
+        >
             {stats.map((stat, index) => (
               <Box key={index} sx={{ textAlign: 'center' }}>
                 <Avatar 
                   sx={{ 
                     bgcolor: '#2E4057', 
                     mx: 'auto', 
-                    mb: 1,
-                    width: 56,
-                    height: 56,
+                    mb: 2,
+                    width: 64,
+                    height: 64,
                   }}
                 >
                   {stat.icon}
                 </Avatar>
-                <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#2E4057' }}>
+                <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#2E4057', mb: 0.5 }}>
                   {stat.number}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
                   {stat.label}
                 </Typography>
               </Box>
             ))}
           </Box>
         </Paper>
-      </Box>
 
       {/* Features Section */}
       <Typography 
@@ -141,6 +176,7 @@ const Home: React.FC = () => {
           textAlign: 'center', 
           mb: 6, 
           color: '#2E4057',
+          fontWeight: 700,
         }}
       >
         Explore Our Tools
@@ -212,7 +248,7 @@ const Home: React.FC = () => {
         }}
       >
         <Typography variant="h4" component="h2" sx={{ mb: 2 }}>
-          Ready to Expand Your Knowledge? 🧠
+          Ready to Expand Your Knowledge?
         </Typography>
         <Typography variant="h6" sx={{ mb: 3, opacity: 0.9 }}>
           Join thousands of researchers, writers, and curious minds

@@ -26,7 +26,7 @@ const Footer: React.FC = () => {
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <Typography variant="body2" sx={{ opacity: 0.8 }}>
-              🦉 Wisdom starts with curiosity
+              Wisdom starts with curiosity
             </Typography>
           </Box>
           
